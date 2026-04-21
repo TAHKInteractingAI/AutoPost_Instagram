@@ -1116,7 +1116,7 @@ def _write_pw_worker():
         '            log(f"   🔗 URL: {page.url}")\n',
         '            # Kiểm tra lỗi "Không thể chia sẻ bài viết"\n',
         '            try:\n',
-        '                body_txt = page.evaluate("() => document.body.innerText || \"\"")"\n',
+        '                body_txt = page.evaluate("() => document.body.innerText || \\"\\"")\n',
         '                if "Không thể chia sẻ bài viết" in body_txt or "Your post could not be shared" in body_txt:\n',
         '                    log(f"   ⚠️ Instagram báo lỗi chia sẻ (lần {wait_attempt+1}) — thử click Thử lại...")\n',
         '                    page.screenshot(path=f"/tmp/debug_share_error_{wait_attempt}.png")\n',
