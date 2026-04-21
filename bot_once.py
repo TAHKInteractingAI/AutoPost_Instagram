@@ -208,9 +208,50 @@ def _write_pw_worker():
         '        log(f"   📄 Title: {page.title()}")\n',
         '\n',
         '        if "login" in page.url or "accounts/login" in page.url:\n',
-        '            page.screenshot(path="/tmp/debug_login.png")\n',
-        '            log("ERR:SESSION_EXPIRED")\n',
-        '            sys.exit(2)\n',
+        '            page.screenshot(path="/tmp/debug_login_before.png")\n',
+        '            log("   ⚠️ Session expired — thử đăng nhập lại...")\n',
+        '            ig_user = os.environ.get("IG_USERNAME", "")\n',
+        '            ig_pass = os.environ.get("IG_PASSWORD", "")\n',
+        '            if not ig_user or not ig_pass:\n',
+        '                log("ERR:SESSION_EXPIRED_NO_CREDENTIALS")\n',
+        '                sys.exit(2)\n',
+        '            try:\n',
+        '                # Đợi form login sẵn sàng\n',
+        '                page.wait_for_selector(\'input[name="username"]\', timeout=15000)\n',
+        '                time.sleep(random.uniform(1.0, 2.0))\n',
+        '                # Nhập username\n',
+        '                page.fill(\'input[name="username"]\', ig_user)\n',
+        '                time.sleep(random.uniform(0.5, 1.0))\n',
+        '                # Nhập password\n',
+        '                page.fill(\'input[name="password"]\', ig_pass)\n',
+        '                time.sleep(random.uniform(0.5, 1.0))\n',
+        '                # Click login\n',
+        '                page.click(\'button[type="submit"]\')\n',
+        '                log("   🔑 Đã submit form đăng nhập, đang chờ...")\n',
+        '                time.sleep(random.uniform(5.0, 8.0))\n',
+        '                page.screenshot(path="/tmp/debug_login_after.png")\n',
+        '                log(f"   🔗 URL sau login: {page.url}")\n',
+        '                # Kiểm tra còn trên trang login không\n',
+        '                if "login" in page.url or "accounts/login" in page.url:\n',
+        '                    # Có thể bị chặn bởi checkpoint / 2FA\n',
+        '                    body_text = page.inner_text("body")\n',
+        '                    if "checkpoint" in page.url or "challenge" in page.url:\n',
+        '                        log("ERR:LOGIN_CHECKPOINT_REQUIRED")\n',
+        '                    elif "two_factor" in page.url or "2fa" in page.url.lower():\n',
+        '                        log("ERR:LOGIN_2FA_REQUIRED")\n',
+        '                    else:\n',
+        '                        log("ERR:LOGIN_FAILED")\n',
+        '                    sys.exit(2)\n',
+        '                # Lưu session mới vào file\n',
+        '                context.storage_state(path=SESSION_FILE)\n',
+        '                log("   ✅ Đăng nhập lại thành công — đã lưu session mới")\n',
+        '                # In ra base64 của session mới để cập nhật secret\n',
+        '                with open(SESSION_FILE, "rb") as _sf:\n',
+        '                    _b64 = __import__("base64").b64encode(_sf.read()).decode()\n',
+        '                log(f"NEW_SESSION_B64:{_b64}")\n',
+        '            except Exception as login_err:\n',
+        '                log(f"ERR:LOGIN_EXCEPTION:{str(login_err)[:150]}")\n',
+        '                sys.exit(2)\n',
         '\n',
         '        log("   ✅ Đã đăng nhập Instagram")\n',
         '        dismiss_popups(page)\n',
@@ -997,6 +1038,14 @@ def post_to_instagram_browser(content, image_url='', hashtags=''):
         if line.startswith('OK:'):
             print(f'   ✅ Đăng thành công: {line[3:]}')
             return line[3:]
+        elif line.startswith('NEW_SESSION_B64:'):
+            new_b64 = line[len('NEW_SESSION_B64:'):]
+            print('\n' + '='*60)
+            print('🔄 SESSION MỚI — cập nhật secret INSTAGRAM_SESSION_B64:')
+            print('='*60)
+            for i in range(0, len(new_b64), 80):
+                print(new_b64[i:i+80])
+            print('='*60 + '\n')
         else:
             print(line)
 
