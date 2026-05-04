@@ -6,7 +6,7 @@ Chạy script này MỘT LẦN trên máy local để tạo giá trị base64
 cho GitHub Secrets.
 
 Cách dùng:
-python encode_secrets.py
+py encode_secrets.py
 """
 
 import base64, json, pathlib, sys

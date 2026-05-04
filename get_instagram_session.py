@@ -9,7 +9,7 @@ Cách dùng:
 1. Cài extension "Cookie-Editor" trên Chrome/Firefox
 2. Vào instagram.com, đăng nhập, mở extension → Export → JSON
 3. Lưu file đó là cookies.json, đặt cùng thư mục với script này
-4. Chạy: python get_instagram_session.py
+4. Chạy: py get_instagram_session.py
 """
 
 import json, os
